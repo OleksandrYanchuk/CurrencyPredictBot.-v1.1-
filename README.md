@@ -1,0 +1,1 @@
+# CurrencyPredictBot.-v1.1-
