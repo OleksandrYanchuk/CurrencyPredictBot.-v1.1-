@@ -24,6 +24,6 @@ combined_data_currency = pd.concat(currency_data)
 
 # Збережіть дані за акції та валютні пари за попередній день
 combined_data_currency.to_csv(
-    f"end_day_data_currency_{end_day_data.date()}.csv",
+    f"currency_data/end_day_data_currency_{end_day_data.date()}.csv",
     index=False,
 )
