@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime
 
+import pandas as pd
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import (
     InlineKeyboardMarkup,
@@ -25,6 +26,38 @@ def load_currency_data():
     with open(file_name, "r") as json_file:
         data = json.load(json_file)
     return data
+
+start_data = pd.read_csv(
+    f"currency_data/currency_data_with_all_indicators_{datetime.today().date()}.csv",
+    skiprows=[0],  # Пропустити перший рядок (назви стовпців)
+    names=[
+        "Date",
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        "Adj Close",
+        "Volume",
+        "Currency",
+        "sentiment",
+        "SMA_50",
+        "SMA_200",
+        "RSI",
+        "MACD",
+        "Signal_Line",
+        "Bollinger_Band_Upper",
+        "Bollinger_Band_Lower",
+    ],
+    dtype={
+        "Open_Currency": float,
+        "High_Currency": float,
+        "Low_Currency": float,
+        "Close_Currency": float,
+        "Adj Close_Currency": float,
+        "Volume_Currency": int,
+        "sentiment": float,
+    },
+)
 
 
 API_TOKEN = os.getenv("API_TOKEN")
@@ -114,10 +147,19 @@ async def show_currency_prediction(message, page):
     currency_data_message = f"Прогноз ціни закриття валютних пар на {datetime.today().date()}:\n"
 
     for currency_pair in current_currency_pairs:
-        closing_price = currency_data[currency_pair]
+        filtered_data = start_data[(start_data['Currency'] == currency_pair) &
+                                   (start_data['Date'] == str(datetime.today().date()))]
+        # Get the first element of the Pandas Series
+        closing_price = currency_data[currency_pair][0]
+
+        # Get the first element of the filtered data
+        open_price = filtered_data["Open"].iloc[0]
+
+        # Compare individual elements
+        direction = "bullish" if closing_price > open_price else "bearish" if closing_price < open_price else "no changes"
 
         currency_data_message += f"\n{currency_pair}"
-        currency_data_message += f" ціна закриття: {closing_price}\n"
+        currency_data_message += f" ціна закриття: {closing_price} напрямок: {direction}\n"
 
     await message.answer(currency_data_message)
 
